@@ -10,9 +10,7 @@ expecting to run on EC2 with an IAM Instance Profile defined.
 Installation
 ============
 
-You can install this with pip::
-
-    pip install statsd-cloudwatch
+    python setup.py --install
 
 It will install a binary called ``statsd_cloudwatch``. This will run in the
 foreground and listen on port 8125. To run it as a service you can use systemd
