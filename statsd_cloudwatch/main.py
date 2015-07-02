@@ -158,11 +158,12 @@ class Server(object):
         "s": Set,
     }
 
-    def __init__(self, namespace="Statsd"):
+    def __init__(self, namespace="Statsd", aws_region="us-east-1"):
         self.namespace = namespace
         self.metrics = {}
         self.flush_due = datetime.datetime.now()
-        self.cloudwatch = connect_to_region('eu-west-1')
+        self.cloudwatch = connect_to_region(aws_region)
+       
 
     def clean_key(self, key):
         return re.sub(r'[^a-zA-Z_\-0-9\.]', '', re.sub(
@@ -172,7 +173,7 @@ class Server(object):
     def process(self, data):
         timestamp = datetime.datetime.now()
 
-        for metric in data.split('\n'):
+        for metric in data.strip().split('\n'):
             match = re.match('\A([^:]+):([^|]+)\|(.+)', metric)
             if not match:
                 log.warn("Skipping malformed metric: {}".format(metric))
@@ -205,7 +206,7 @@ class Server(object):
             metric.push()
             del self.metrics[name]
 
-    def serve(self, hostname='127.0.0.1', port=8125):
+    def serve(self, hostname='0.0.0.0', port=8125):
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._sock.bind((hostname, port))
 
@@ -239,14 +240,17 @@ def main(argv=sys.argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', dest='debug', action='store_true', default=False)
     parser.add_argument('-p', '--port', dest='port', type=int, default=8125)
+    parser.add_argument('-H', '--host', dest='host', type=str, default='0.0.0.0')
+    parser.add_argument('-n', '--namespace', dest='namespace', type=str, default='Statsd')
+    parser.add_argument('-r', '--region', dest='region', type=str, default='us-east-1')
     options = parser.parse_args(argv[1:])
 
     logging.basicConfig(loglevel=logging.DEBUG if options.debug else logging.INFO)
 
-    server = Server()
+    server = Server(namespace=options.namespace,aws_region=options.region)
 
     try:
-        server.serve(port=options.port)
+        server.serve(port=options.port,hostname=options.host)
     except KeyboardInterrupt:
         pass
 
