@@ -26,7 +26,11 @@ For upstart, add ``/etc/init/statsd.conf``::
     setgid statsd
     kill timeout 900
     respawn
-    exec /usr/local/bin/statsd_cloudwatch --host 0.0.0.0 --port 8125 --namespace statsd_reflector --region us-east-1
+    exec /usr/local/bin/statsd_cloudwatch \
+        --host 0.0.0.0 \
+        --port 8125 \
+        --namespace statsd_reflector \
+        --region us-east-1
 
 
 Credentials
